@@ -184,42 +184,58 @@ for name, heuristic in heuristics.items():
 
 
 def rbfs(puzzle, goal, zero_pos, depth, f_limit, g, heuristics):
+    # Eğer mevcut durum hedef durumsa, çözüm bulundu (True) ve boş bir yol döndür
     if puzzle == goal:
         return True, []
 
+    # f(n) değeri hesaplanır: g(n) + h(n) (şu ana kadarki maliyet + heuristik değer)
     f_value = g + heuristics(puzzle)
 
+    # Eğer f(n) mevcut sınırı aşıyorsa, arama durur ve yeni sınır olarak f(n) döndürülür
     if f_value > f_limit:
         return False, f_value
 
+    # Mevcut durumun tüm komşu durumları (ardıl düğümler) üretilir
     nodes = generate_nodes(puzzle, zero_pos)
-    successors = []
+    successors = []  # Ardıl durumları depolamak için bir liste oluştur
 
+    # Her ardıl düğüm için maliyet ve f(n) hesaplanır
     for new_puzzle, new_zero_pos in nodes:
-        new_g = g + 1
+        new_g = g + 1  # g(n) maliyeti her hareket için bir artırılır
+        # Ardıl durumu ve hesaplanan f(n) değerini listeye ekle
         successors.append((new_puzzle, new_zero_pos, new_g, new_g + heuristics(new_puzzle)))
 
+    # Eğer ardıl düğüm yoksa, sonsuz maliyetle başarısızlık döndür
     if not successors:
         return False, float('inf')
 
+    # Ardıl düğümleri f(n) değerine göre sıralar
     successors.sort(key=lambda x: x[3])
 
-    while True:
+    while True:  # Sonsuz döngü, başarılı bir çözüm bulunana veya başarısızlık döndürülene kadar devam eder
+        # En iyi ardıl düğüm (en düşük f(n) değerine sahip) seçilir
         best_successor = successors[0]
         best_puzzle, best_zero_pos, best_g, best_f = best_successor
 
+        # Eğer en iyi ardıl düğümün f(n) değeri sınırı aşıyorsa, başarısızlık döndür
         if best_f > f_limit:
             return False, best_f
 
+        # İkinci en iyi ardıl düğümün f(n) değeri, alternatif sınır olarak belirlenir
         alternative_f = successors[1][3] if len(successors) > 1 else float('inf')
 
+        # En iyi ardıl düğüm üzerinde Recursive Best-First Search (RBFS) çağrılır
         success, result = rbfs(best_puzzle, goal, best_zero_pos, depth + 1, min(f_limit, alternative_f), best_g, heuristics)
 
+        # Eğer başarılı bir çözüm bulunursa, çözüm yolu döndürülür
         if success:
             return True, [best_puzzle] + result
 
+        # Başarısızlık durumunda en iyi ardıl düğümün f(n) değeri güncellenir
         successors[0] = (best_puzzle, best_zero_pos, best_g, result)
+        # Ardıl düğümleri tekrar sıralar
         successors.sort(key=lambda x: x[3])
+
 
 
 def run_rbfs(puzzle, heuristics):
