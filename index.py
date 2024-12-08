@@ -135,26 +135,36 @@ zero_pos = (1, 1)
 
 
 def a_star(puzzle, heuristic_func):
-    start = puzzle
-    zero_pos = (1, 1)  
-    frontier = []
-    heapq.heappush(frontier, (heuristic_func(start), 0, start, zero_pos, []))
-    explored = set()
-    nodes_explored = 0
+    start = puzzle  # Başlangıç durumunu al
+    zero_pos = (1, 1)  # Boş kutunun (0'ın) başlangıç konumu
+    frontier = []  # Öncelik kuyruğunu başlat (açık liste)
+    # İlk durum için (heuristic değer, maliyet, durum, boş konum, yol) eklenir
+    heapq.heappush(frontier, (heuristic_func(start), 0, start, zero_pos, []))  
+    explored = set()  # Ziyaret edilen durumları saklayan küme
+    nodes_explored = 0  # Keşfedilen düğüm sayacı
 
-    while frontier:
+    while frontier:  # Öncelik kuyruğu boş olmadığı sürece döngüye devam et
+        # Kuyruktan en düşük toplam maliyetli durumu al
         _, cost, current, zero_pos, path = heapq.heappop(frontier)
-        nodes_explored += 1
-        if current == goal_state:
-            return path, nodes_explored  # Çözüm yolu ve keşfedilen düğüm sayısı
+        nodes_explored += 1  # Keşfedilen düğüm sayısını bir artır
 
+        # Eğer mevcut durum hedef durumsa, çözüm yolunu ve düğüm sayısını döndür
+        if current == goal_state:
+            return path, nodes_explored  
+
+        # Mevcut durumu ziyaret edilenlere ekle
         explored.add(tuple(map(tuple, current)))
+
+        # Komşu durumları üret ve her biri için işlem yap
         for neighbor, new_zero_pos in generate_nodes(current, zero_pos):
+            # Eğer komşu durum ziyaret edilmediyse
             if tuple(map(tuple, neighbor)) not in explored:
-                new_cost = cost + 1
-                total_cost = new_cost + heuristic_func(neighbor)
+                new_cost = cost + 1  # Geçerli maliyeti bir artır
+                total_cost = new_cost + heuristic_func(neighbor)  # Toplam maliyeti hesapla
+                # Komşuyu öncelik kuyruğuna ekle
                 heapq.heappush(frontier, (total_cost, new_cost, neighbor, new_zero_pos, path + [neighbor]))
 
+    # Eğer çözüm bulunamazsa, None ve keşfedilen düğüm sayısını döndür
     return None, nodes_explored
 heuristics = {
     "Manhattan Distance": manhattan_distance,
